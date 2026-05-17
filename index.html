@@ -208,7 +208,7 @@
       <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Groq API Key</label>
       <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
       <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Modelo Vision</label>
-      <input type="text" class="modal-input" id="modelInput" placeholder="ex: llama-3.2-11b-vision-preview" value="llama-3.2-11b-vision-preview" autocomplete="off">
+      <input type="text" class="modal-input" id="modelInput" placeholder="ex: llama-3.2-90b-vision" value="llama-3.2-90b-vision" autocomplete="off">
 
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancelar</button>
@@ -382,7 +382,7 @@
 
 
 let storedApiKey = localStorage.getItem('groq_api_key') || '';
-let storedModel = localStorage.getItem('groq_model') || 'llama-3.2-11b-vision-preview';
+let storedModel = localStorage.getItem('groq_model') || 'llama-3.2-90b-vision';
 
 function openSettings() {
   document.getElementById('apiKeyInput').value = storedApiKey;
@@ -396,7 +396,7 @@ function closeSettings() {
 
 function saveApiKey() {
   const keyVal = document.getElementById('apiKeyInput').value.trim();
-  const modelVal = document.getElementById('modelInput').value.trim() || 'llama-3.2-11b-vision-preview';
+  const modelVal = document.getElementById('modelInput').value.trim() || 'llama-3.2-90b-vision';
   
   storedApiKey = keyVal;
   storedModel = modelVal;
