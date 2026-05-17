@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#f4fbf2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NutriScan">
+<meta name="description" content="Fotografe um alimento e receba receitas e informações nutricionais personalizadas">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>NutriScan — Receitas Inteligentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --p1: #93d880;
+    --p2: #a2e28f;
+    --p3: #b1eb9d;
+    --p4: #c0f5ac;
+    --p5: #cfffba;
+
+    --bg-base:   #f4fbf2;
+    --bg-deep:   #ffffff;
+    --bg-raised: #ffffff;
+    --bg-rim:    #e5f2e1;
+
+    --surface:   #ffffff;
+    --surface-2: #f8fdf6;
+    --on-light:  #1e2b19;
+    --mid-light: #3b5735;
+    --muted:     #698561;
+    --border-l:  rgba(147, 216, 128, 0.25);
+    --border-lm: rgba(147, 216, 128, 0.45);
+
+    --ok-bg: #e8f5e9;   --ok-text: #1b5e20;   --ok-border: #a5d6a7;
+    --warn-bg: #fffde7; --warn-text: #b45309;  --warn-border: #fbbf24;
+    --bad-bg:  #fce4ec; --bad-text: #9b1c1c;   --bad-border: #f9a8d4;
+
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body:    'DM Sans', system-ui, sans-serif;
+    --r-sm:  8px;
+    --r-md:  14px;
+    --r-lg:  22px;
+    --r-xl:  30px;
+    --shadow-soft: 0 8px 30px rgba(147, 216, 128, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: var(--font-body); background: var(--bg-base); color: var(--on-light); overscroll-behavior: none; }
+  #app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+  .header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-l); padding: 14px 20px 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--p1); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(147, 216, 128, 0.4); }
+  .logo-mark svg { width: 19px; height: 19px; fill: #ffffff; }
+  .logo-text { font-family: var(--font-display); font-size: 21px; color: var(--on-light); letter-spacing: -0.3px; }
+  .logo-text span { color: var(--p1); }
+  .settings-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--bg-rim); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 17px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+
+  .main { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+  .main::-webkit-scrollbar { width: 3px; }
+  .main::-webkit-scrollbar-track { background: transparent; }
+  .main::-webkit-scrollbar-thumb { background: var(--p3); border-radius: 2px; }
+
+  .camera-section { background: var(--bg-base); padding: 16px 16px 12px; }
+  .camera-card { background: var(--surface); border-radius: var(--r-xl); border: 2px dashed var(--p2); overflow: hidden; aspect-ratio: 4/3; position: relative; cursor: pointer; transition: all 0.3s ease; box-shadow: var(--shadow-soft); }
+  .camera-card:active { border-color: var(--p1); transform: scale(0.99); background: var(--p5); }
+  .camera-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .camera-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+  .camera-icon-wrap { width: 76px; height: 76px; border-radius: 50%; background: var(--p5); border: 2px solid var(--p1); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(147, 216, 128, 0.3); }
+  .camera-icon-wrap svg { width: 34px; height: 34px; fill: var(--p1); }
+  .camera-hint { font-family: var(--font-display); font-size: 18px; color: var(--on-light); text-align: center; line-height: 1.4; }
+  .camera-hint small { display: block; font-family: var(--font-body); font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 5px; }
+  #cameraInput { display: none; }
+
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding: 14px 20px 8px; }
+
+  .profile-section { padding: 0 16px 8px; }
+  .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .profile-chip { padding: 10px 6px 8px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--bg-rim); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+  .profile-chip.active { background: var(--p5); border-color: var(--p1); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(147, 216, 128, 0.2); }
+  .profile-chip .chip-icon { font-size: 20px; }
+  .profile-chip .chip-label { font-size: 10px; color: var(--muted); font-weight: 500; line-height: 1.25; }
+  .profile-chip.active .chip-label { color: var(--on-light); font-weight: 600; }
+
+  .scan-area { padding: 12px 16px 16px; }
+  .scan-btn { width: 100%; padding: 16px; border-radius: var(--r-lg); background: linear-gradient(135deg, var(--p1), var(--p2)); border: none; color: #ffffff; font-family: var(--font-display); font-size: 18px; letter-spacing: 0.01em; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; position: relative; overflow: hidden; box-shadow: 0 8px 25px rgba(147, 216, 128, 0.4); text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .scan-btn:active { transform: scale(0.98); box-shadow: 0 4px 15px rgba(147, 216, 128, 0.3); }
+  .scan-btn:disabled { background: var(--bg-rim); color: var(--muted); cursor: not-allowed; transform: none; box-shadow: none; text-shadow: none; }
+  .scan-btn svg { width: 22px; height: 22px; fill: currentColor; }
+  .scan-btn .btn-shimmer { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%); transform: translateX(-100%); animation: shimmer 2.2s infinite; }
+  @keyframes shimmer { to { transform: translateX(220%); } }
+
+  .install-banner { margin: 0 16px 10px; background: var(--p5); border: 1px solid var(--p3); border-radius: var(--r-md); padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .install-banner-text { font-size: 12px; color: var(--on-light); flex: 1; font-weight: 500; }
+  .install-banner-btn { font-size: 12px; font-weight: 600; color: #ffffff; background: var(--p1); border: none; border-radius: 20px; padding: 5px 14px; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: 0 2px 8px rgba(147, 216, 128, 0.3); }
+  .install-banner-close { font-size: 16px; color: var(--muted); cursor: pointer; flex-shrink: 0; }
+  .install-banner.hidden { display: none; }
+
+  .content-area { background: var(--surface); border-radius: 32px 32px 0 0; min-height: calc(100dvh - 360px); padding: 24px 16px 48px; box-shadow: 0 -10px 30px rgba(147, 216, 128, 0.12); position: relative; z-index: 5; }
+
+  .loading-state { display: none; flex-direction: column; align-items: center; gap: 16px; padding: 48px 20px; }
+  .loading-ring { width: 52px; height: 52px; border-radius: 50%; border: 4px solid var(--p5); border-top-color: var(--p1); animation: spin 0.85s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: var(--font-display); font-size: 19px; color: var(--on-light); text-align: center; }
+  .loading-sub { font-size: 14px; color: var(--muted); font-weight: 400; }
+
+  .empty-state { text-align: center; padding: 36px 20px; }
+  .empty-emoji { font-size: 58px; margin-bottom: 18px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05)); }
+  .empty-title { font-family: var(--font-display); font-size: 24px; color: var(--on-light); margin-bottom: 12px; }
+  .empty-desc { font-size: 14px; color: var(--muted); line-height: 1.65; font-weight: 400; max-width: 280px; margin: 0 auto; }
+
+  .error-msg { background: var(--bad-bg); border: 1px solid var(--bad-border); border-radius: var(--r-md); padding: 14px 16px; font-size: 13px; color: var(--bad-text); display: none; margin-bottom: 16px; line-height: 1.5; }
+
+  .result-wrap { display: none; }
+  .food-identified { display: flex; align-items: center; gap: 16px; background: var(--p5); border-radius: var(--r-lg); border: 1px solid var(--p3); padding: 16px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(147, 216, 128, 0.15); }
+  .food-id-icon { width: 52px; height: 52px; border-radius: 16px; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .food-id-label { font-size: 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
+  .food-id-name { font-family: var(--font-display); font-size: 24px; color: var(--on-light); line-height: 1.2; margin-top: 2px; }
+  .food-id-variety { font-size: 13px; color: var(--mid-light); font-weight: 400; }
+
+  .section-tabs { display: flex; gap: 6px; background: var(--surface-2); border: 1px solid var(--border-l); border-radius: var(--r-xl); padding: 5px; margin-bottom: 20px; }
+  .section-tab { flex: 1; padding: 10px 4px; border-radius: 20px; font-size: 13px; font-weight: 500; text-align: center; cursor: pointer; color: var(--muted); transition: all 0.2s ease; border: none; background: transparent; font-family: var(--font-body); }
+  .section-tab.active { background: #ffffff; color: var(--p1); font-weight: 600; box-shadow: 0 2px 8px rgba(147, 216, 128, 0.2); }
+
+  .nutrition-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .nutri-cell { background: var(--surface-2); border-radius: var(--r-md); padding: 14px 8px; text-align: center; border: 1px solid var(--border-l); transition: transform 0.2s; }
+  .nutri-cell:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(147, 216, 128, 0.1); }
+  .nutri-value { font-size: 18px; font-weight: 600; color: var(--on-light); }
+  .nutri-unit { font-size: 10px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .nutri-label { font-size: 11px; color: var(--mid-light); font-weight: 500; margin-top: 4px; }
+
+  .health-alerts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .health-alert { border-radius: var(--r-md); padding: 12px 16px; display: flex; align-items: flex-start; gap: 12px; border: 1px solid transparent; }
+  .health-alert.ok    { background: var(--ok-bg);   border-color: var(--ok-border);   }
+  .health-alert.warn  { background: var(--warn-bg); border-color: var(--warn-border); }
+  .health-alert.danger{ background: var(--bad-bg);  border-color: var(--bad-border);  }
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+  .alert-profile { font-size: 10px; font-weight: 600; color: inherit; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .alert-msg { font-size: 14px; color: inherit; line-height: 1.5; font-weight: 400; }
+
+  .benefits-wrap { margin-top: 8px; background: var(--p5); border-radius: var(--r-lg); padding: 16px; border: 1px solid var(--p3); }
+  .benefits-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid-light); margin-bottom: 12px; }
+  .benefits-list { display: flex; flex-direction: column; gap: 12px; }
+  .benefit-item { display: flex; gap: 12px; align-items: flex-start; }
+  .benefit-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--p1); flex-shrink: 0; margin-top: 6px; box-shadow: 0 0 0 3px rgba(147, 216, 128, 0.3); }
+  .benefit-text { font-size: 14px; color: var(--on-light); line-height: 1.6; font-weight: 400; }
+
+  .recipe-card { background: #ffffff; border-radius: var(--r-lg); border: 1px solid var(--border-l); overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow-soft); }
+  .recipe-header { background: linear-gradient(to bottom right, var(--p5), #ffffff); padding: 20px 16px; border-bottom: 1px solid var(--border-l); }
+  .recipe-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .recipe-badge { font-size: 11px; padding: 4px 12px; border-radius: 20px; background: #ffffff; color: var(--p1); border: 1px solid var(--p2); font-weight: 600; box-shadow: 0 2px 5px rgba(147, 216, 128, 0.1); }
+  .recipe-name { font-family: var(--font-display); font-size: 26px; color: var(--on-light); line-height: 1.2; margin-bottom: 8px; }
+  .recipe-desc { font-size: 14px; color: var(--mid-light); font-weight: 400; line-height: 1.6; }
+
+  .recipe-body { padding: 20px 16px; }
+  .recipe-section-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--p1); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .recipe-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-l); }
+  .ingredients-list { margin-bottom: 24px; }
+  .ingredient-item { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border-l); font-size: 14px; }
+  .ingredient-item:last-child { border-bottom: none; }
+  .ingredient-qty { font-weight: 600; color: var(--p1); font-size: 14px; min-width: 70px; }
+  .ingredient-name { color: var(--on-light); font-weight: 400; }
+
+  .steps-list { margin-bottom: 4px; }
+  .step-item { display: flex; gap: 14px; padding: 12px 0; border-bottom: 1px dashed var(--border-l); }
+  .step-item:last-child { border-bottom: none; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: var(--p5); border: 2px solid var(--p1); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--p1); flex-shrink: 0; }
+  .step-text { font-size: 14px; color: var(--on-light); font-weight: 400; line-height: 1.65; }
+
+  .tab-panel { display: none; animation: fadeIn 0.3s ease; }
+  .tab-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── SETTINGS MODAL ── */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(20, 26, 18, 0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 100; opacity: 0; transition: opacity 0.3s; }
+  .modal-overlay.active { display: flex; opacity: 1; }
+  .modal-content { background: var(--surface); width: 90%; max-width: 360px; border-radius: var(--r-xl); padding: 24px; box-shadow: var(--shadow-soft); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .modal-overlay.active .modal-content { transform: translateY(0); }
+  .modal-title { font-family: var(--font-display); font-size: 22px; color: var(--on-light); margin-bottom: 8px; }
+  .modal-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 20px; }
+  .modal-input { width: 100%; padding: 12px 14px; border-radius: var(--r-md); border: 1px solid var(--border-lm); background: var(--surface-2); color: var(--on-light); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 20px; }
+  .modal-input:focus { border-color: var(--p1); background: #ffffff; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-btn { padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; }
+  .modal-btn-cancel { background: transparent; color: var(--muted); }
+  .modal-btn-cancel:hover { background: var(--surface-2); }
+  .modal-btn-save { background: var(--p1); color: #ffffff; box-shadow: 0 4px 12px rgba(147, 216, 128, 0.3); }
+  .modal-btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(147, 216, 128, 0.4); }
+
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HEADER -->
+  
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-title">Configurações</div>
+      <div class="modal-desc">Insira sua API Key gratuita do Groq para analisar os alimentos. Ela ficará salva apenas neste dispositivo (seguro para GitHub Pages).</div>
+      <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancelar</button>
+        <button class="modal-btn modal-btn-save" onclick="saveApiKey()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2-13 8 0 0 1-3 5-6"/>
+        </svg>
+      </div>
+      <span class="logo-text">Nutri<span>Scan</span></span>
+    </div>
+    <div class="settings-btn">⚙</div>
+  </div>
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner hidden" id="installBanner">
+    <span class="install-banner-text">📲 Instale o NutriScan na tela inicial</span>
+    <button class="install-banner-btn" id="installBtn">Instalar</button>
+    <span class="install-banner-close" id="closeBanner">✕</span>
+  </div>
+
+  <!-- MAIN SCROLL -->
+  <div class="main">
+
+    <!-- CAMERA SECTION -->
+    <div class="camera-section">
+      <div class="camera-card" id="cameraCard" onclick="triggerCamera()">
+        <img class="camera-preview" id="preview" alt="Pré-visualização do alimento">
+        <div class="camera-placeholder" id="placeholder">
+          <div class="camera-icon-wrap">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 3L7.17 5H4C2.9 5 2 5.9 2 7v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.17L15 3H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+            </svg>
+          </div>
+          <div class="camera-hint">
+            Fotografe um alimento
+            <small>Frutas · legumes · grãos · carnes</small>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" onchange="handleImage(event)">
+    </div>
+
+    <!-- PROFILE SECTION -->
+    <div class="section-label">Meu perfil de saúde</div>
+    <div class="profile-section">
+      <div class="profile-grid">
+        <div class="profile-chip" data-profile="diabetico" onclick="toggleProfile(this)">
+          <span class="chip-icon">🩸</span>
+          <span class="chip-label">Diabético</span>
+        </div>
+        <div class="profile-chip" data-profile="hipertenso" onclick="toggleProfile(this)">
+          <span class="chip-icon">❤️</span>
+          <span class="chip-label">Hipertenso</span>
+        </div>
+        <div class="profile-chip" data-profile="obeso" onclick="toggleProfile(this)">
+          <span class="chip-icon">⚖️</span>
+          <span class="chip-label">Obesidade</span>
+        </div>
+        <div class="profile-chip" data-profile="celiaco" onclick="toggleProfile(this)">
+          <span class="chip-icon">🌾</span>
+          <span class="chip-label">Intolerante Glúten</span>
+        </div>
+        <div class="profile-chip" data-profile="lactose" onclick="toggleProfile(this)">
+          <span class="chip-icon">🥛</span>
+          <span class="chip-label">Intolerante Lactose</span>
+        </div>
+        <div class="profile-chip" data-profile="saudavel" onclick="toggleProfile(this)">
+          <span class="chip-icon">✨</span>
+          <span class="chip-label">Saudável</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCAN BUTTON -->
+    <div class="scan-area">
+      <button class="scan-btn" id="scanBtn" onclick="analyzeFood()" disabled>
+        <svg viewBox="0 0 24 24">
+          <path d="M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M22 5h-6v6h6V5zm-6 8h1.5v1.5H16V13zm1.5 1.5H19V16h-1.5v-1.5zM19 13h1.5v1.5H19V13zm-3 3h1.5v1.5H16V16zm1.5 1.5H19V19h-1.5v-1.5zM19 16h1.5v1.5H19V16zm1.5-1.5H22V16h-1.5v-1.5zm0 3H22V19h-1.5v-1.5z"/>
+        </svg>
+        Analisar alimento
+        <div class="btn-shimmer"></div>
+      </button>
+    </div>
+
+    <!-- CONTENT AREA (white sheet) -->
+    <div class="content-area" id="contentArea">
+
+      <div class="loading-state" id="loadingState">
+        <div class="loading-ring"></div>
+        <div class="loading-text">Identificando alimento…</div>
+        <div class="loading-sub">Gerando receita personalizada</div>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-emoji">🥦</div>
+        <div class="empty-title">Pronto para começar?</div>
+        <div class="empty-desc">Fotografe qualquer alimento — hortifrúti, grão ou carne — e receba uma receita nutritiva com análise completa para o seu perfil de saúde.</div>
+      </div>
+
+      <div class="result-wrap" id="resultWrap">
+
+        <!-- Food banner -->
+        <div class="food-identified">
+          <div class="food-id-icon" id="foodEmoji">🥦</div>
+          <div>
+            <div class="food-id-label">Alimento identificado</div>
+            <div class="food-id-name" id="foodName">—</div>
+            <div class="food-id-variety" id="foodVariety">—</div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="section-tabs">
+          <button class="section-tab active" onclick="switchTab('nutricao')">Nutrição</button>
+          <button class="section-tab" onclick="switchTab('receita')">Receita</button>
+          <button class="section-tab" onclick="switchTab('saude')">Saúde</button>
+        </div>
+
+        <!-- TAB: NUTRIÇÃO -->
+        <div class="tab-panel active" id="tab-nutricao">
+          <div class="nutrition-strip" id="nutritionStrip"></div>
+          <div class="health-alerts" id="healthAlerts"></div>
+          <div class="benefits-wrap">
+            <div class="benefits-title">Benefícios</div>
+            <div class="benefits-list" id="benefitsList"></div>
+          </div>
+        </div>
+
+        <!-- TAB: RECEITA -->
+        <div class="tab-panel" id="tab-receita">
+          <div class="recipe-card">
+            <div class="recipe-header">
+              <div class="recipe-meta">
+                <span class="recipe-badge" id="recipeTime">⏱ —</span>
+                <span class="recipe-badge" id="recipeServes">👥 —</span>
+                <span class="recipe-badge" id="recipeDiff">👨‍🍳 —</span>
+              </div>
+              <div class="recipe-name" id="recipeName">—</div>
+              <div class="recipe-desc" id="recipeDesc">—</div>
+            </div>
+            <div class="recipe-body">
+              <div class="recipe-section-title">Ingredientes</div>
+              <div class="ingredients-list" id="ingredientsList"></div>
+              <div class="recipe-section-title">Modo de preparo</div>
+              <div class="steps-list" id="stepsList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: SAÚDE -->
+        <div class="tab-panel" id="tab-saude">
+          <div class="health-alerts" id="healthAlertsDetail"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+let storedApiKey = localStorage.getItem('groq_api_key') || '';
+
+function openSettings() {
+  document.getElementById('apiKeyInput').value = storedApiKey;
+  document.getElementById('settingsModal').classList.add('active');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
+function saveApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  storedApiKey = val;
+  if(val) {
+    localStorage.setItem('groq_api_key', val);
+  } else {
+    localStorage.removeItem('groq_api_key');
+  }
+  closeSettings();
+}
+
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('SW registrado!', reg);
+    }).catch(err => console.error('Erro no SW:', err));
+  });
+}
+
+// Add event listener to settings button
+document.querySelector('.settings-btn').addEventListener('click', openSettings);
+
+let selectedProfiles = [];
+let capturedImageBase64 = null;
+let deferredInstallPrompt = null;
+
+// PWA install
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBanner').classList.remove('hidden');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('installBanner').classList.add('hidden');
+  deferredInstallPrompt = null;
+});
+document.getElementById('closeBanner').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.add('hidden');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.add('hidden');
+});
+
+function triggerCamera() { document.getElementById('cameraInput').click(); }
+
+function handleImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const base64 = e.target.result;
+    capturedImageBase64 = base64.split(',')[1];
+    const preview = document.getElementById('preview');
+    preview.src = base64;
+    preview.style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('scanBtn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function toggleProfile(el) {
+  el.classList.toggle('active');
+  const p = el.dataset.profile;
+  selectedProfiles = el.classList.contains('active')
+    ? [...selectedProfiles, p]
+    : selectedProfiles.filter(x => x !== p);
+}
+
+function switchTab(tab) {
+  const tabs = ['nutricao', 'receita', 'saude'];
+  document.querySelectorAll('.section-tab').forEach((t, i) => {
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.classList.toggle('active', p.id === 'tab-' + tab);
+  });
+}
+
+function setLoading(on) {
+  document.getElementById('loadingState').style.display = on ? 'flex' : 'none';
+  if (on) document.getElementById('emptyState').style.display = 'none';
+  else if (document.getElementById('resultWrap').style.display === 'none')
+    document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('scanBtn').disabled = on;
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('resultWrap').style.display = 'none';
+  document.getElementById('loadingState').style.display = 'none';
+}
+
+async function analyzeFood() {
+  if (!capturedImageBase64) { alert('Por favor, fotografe um alimento primeiro.'); return; }
+  document.getElementById('errorMsg').style.display = 'none';
+  document.getElementById('resultWrap').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'none';
+  setLoading(true);
+
+  
+  if (!storedApiKey) {
+    showError('Por favor, configure sua API Key do Groq nas engrenagens (⚙) no topo da tela.');
+    setLoading(false);
+    return;
+  }
+
+  const profilesStr = selectedProfiles.length > 0
+    ? `Perfis de saúde do usuário: ${selectedProfiles.join(', ')}.`
+    : 'Nenhum perfil específico — usuário saudável em geral.';
+
+  const systemPrompt = `Você é um nutricionista e chef especializado em alimentação saudável. Analise a imagem e responda SOMENTE com JSON puro, sem markdown, sem blocos de código.
+
+Esquema exato:
+{
+  "alimento": {
+    "nome": "nome em português",
+    "variedade": "variedade ou descrição breve",
+    "emoji": "emoji representativo"
+  },
+  "nutricao": {
+    "calorias": número inteiro (kcal/100g),
+    "proteinas": número 1 decimal (g/100g),
+    "carboidratos": número 1 decimal (g/100g),
+    "fibras": número 1 decimal (g/100g)
+  },
+  "beneficios": ["benefício 1","benefício 2","benefício 3"],
+  "perfis_saude": [
+    {
+      "perfil": "Diabéticos|Hipertensos|Obesidade|Intolerantes ao Glúten|Intolerantes à Lactose",
+      "nivel": "ok|atencao|cuidado",
+      "mensagem": "orientação prática 1-2 frases"
+    }
+  ],
+  "receita": {
+    "nome": "nome criativo",
+    "descricao": "descrição apetitosa 1-2 frases",
+    "tempo": "XX min",
+    "porcoes": "X porções",
+    "dificuldade": "Fácil|Médio|Difícil",
+    "ingredientes": [{"qty":"qty+unidade","nome":"ingrediente"}],
+    "passos": ["Passo 1...","Passo 2...","Passo 3..."]
+  }
+}
+
+${profilesStr}
+Inclua todos os 5 perfis_saude. Receita deve ser saudável e adaptada ao perfil do usuário.`;
+
+  try {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${storedApiKey}` // <-- Coloque sua API Key do Groq aqui
+      },
+      body: JSON.stringify({
+        model: 'llama-3.2-90b-vision-preview',
+        temperature: 0.1,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: 'Analise este alimento e retorne SOMENTE o JSON válido.' },
+              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${capturedImageBase64}` } }
+            ]
+          }
+        ]
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Erro ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const raw = data.choices[0].message.content;
+    const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    setLoading(false);
+    renderResult(result);
+
+  } catch (e) {
+    setLoading(false);
+    showError('Não foi possível analisar o alimento. Verifique sua conexão e tente novamente.\n\nDetalhe: ' + e.message);
+  }
+}
+
+function renderResult(data) {
+  document.getElementById('foodEmoji').textContent = data.alimento.emoji || '🍽️';
+  document.getElementById('foodName').textContent = data.alimento.nome;
+  document.getElementById('foodVariety').textContent = data.alimento.variedade;
+
+  const n = data.nutricao;
+  document.getElementById('nutritionStrip').innerHTML = `
+    <div class="nutri-cell"><div class="nutri-value">${n.calorias}</div><div class="nutri-unit">kcal</div><div class="nutri-label">Calorias</div></div>
+    <div class="nutri-cell"><div class="nutri-value">${n.proteinas}g</div><div class="nutri-unit">/100g</div><div class="nutri-label">Proteína</div></div>
+    <div class="nutri-cell"><div class="nutri-value">${n.carboidratos}g</div><div class="nutri-unit">/100g</div><div class="nutri-label">Carbos</div></div>
+    <div class="nutri-cell"><div class="nutri-value">${n.fibras}g</div><div class="nutri-unit">/100g</div><div class="nutri-label">Fibras</div></div>
+  `;
+
+  const alertMap = { ok: '✅', atencao: '⚠️', cuidado: '🔴' };
+  const classMap = { ok: 'ok', atencao: 'warn', cuidado: 'danger' };
+  const alertsHtml = data.perfis_saude.map(p => `
+    <div class="health-alert ${classMap[p.nivel]}">
+      <div class="alert-icon">${alertMap[p.nivel]}</div>
+      <div>
+        <div class="alert-profile">${p.perfil}</div>
+        <div class="alert-msg">${p.mensagem}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('healthAlerts').innerHTML = alertsHtml;
+  document.getElementById('healthAlertsDetail').innerHTML = alertsHtml;
+
+  document.getElementById('benefitsList').innerHTML = data.beneficios.map(b => `
+    <div class="benefit-item"><div class="benefit-dot"></div><div class="benefit-text">${b}</div></div>`).join('');
+
+  const r = data.receita;
+  document.getElementById('recipeTime').textContent = '⏱ ' + r.tempo;
+  document.getElementById('recipeServes').textContent = '👥 ' + r.porcoes;
+  document.getElementById('recipeDiff').textContent = '👨‍🍳 ' + r.dificuldade;
+  document.getElementById('recipeName').textContent = r.nome;
+  document.getElementById('recipeDesc').textContent = r.descricao;
+
+  document.getElementById('ingredientsList').innerHTML = r.ingredientes.map(i => `
+    <div class="ingredient-item">
+      <span class="ingredient-qty">${i.qty}</span>
+      <span class="ingredient-name">${i.nome}</span>
+    </div>`).join('');
+
+  document.getElementById('stepsList').innerHTML = r.passos.map((step, i) => `
+    <div class="step-item">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-text">${step}</div>
+    </div>`).join('');
+
+  document.getElementById('resultWrap').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+  setTimeout(() => document.getElementById('contentArea').scrollIntoView({ behavior: 'smooth' }), 100);
+  switchTab('nutricao');
+}
+</script>
+</body>
+</html>
