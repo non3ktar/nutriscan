@@ -204,11 +204,11 @@
     <div class="modal-content">
       <div class="modal-title">Configurações</div>
       
-      <div class="modal-desc">Insira sua API Key gratuita do Groq para analisar os alimentos. Ela ficará salva apenas neste dispositivo (seguro para GitHub Pages).</div>
-      <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Groq API Key</label>
-      <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+      <div class="modal-desc">Insira sua API Key gratuita do Google AI Studio para analisar os alimentos. Ela ficará salva apenas neste dispositivo (seguro para GitHub Pages).</div>
+      <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Gemini API Key</label>
+      <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
       <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Modelo Vision</label>
-      <input type="text" class="modal-input" id="modelInput" placeholder="ex: llama-4-scout-17b-16e-instruct" value="llama-4-scout-17b-16e-instruct" autocomplete="off">
+      <input type="text" class="modal-input" id="modelInput" placeholder="ex: gemini-1.5-flash" value="gemini-1.5-flash" autocomplete="off">
 
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancelar</button>
@@ -381,8 +381,8 @@
 <script>
 
 
-let storedApiKey = localStorage.getItem('groq_api_key') || '';
-let storedModel = localStorage.getItem('groq_model') || 'llama-4-scout-17b-16e-instruct';
+let storedApiKey = localStorage.getItem('gemini_api_key') || '';
+let storedModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
 
 function openSettings() {
   document.getElementById('apiKeyInput').value = storedApiKey;
@@ -396,15 +396,15 @@ function closeSettings() {
 
 function saveApiKey() {
   const keyVal = document.getElementById('apiKeyInput').value.trim();
-  const modelVal = document.getElementById('modelInput').value.trim() || 'llama-4-scout-17b-16e-instruct';
+  const modelVal = document.getElementById('modelInput').value.trim() || 'gemini-1.5-flash';
   
   storedApiKey = keyVal;
   storedModel = modelVal;
   
-  if(keyVal) localStorage.setItem('groq_api_key', keyVal);
-  else localStorage.removeItem('groq_api_key');
+  if(keyVal) localStorage.setItem('gemini_api_key', keyVal);
+  else localStorage.removeItem('gemini_api_key');
   
-  localStorage.setItem('groq_model', modelVal);
+  localStorage.setItem('gemini_model', modelVal);
   closeSettings();
 }
 
@@ -507,7 +507,7 @@ async function analyzeFood() {
 
   
   if (!storedApiKey) {
-    showError('Por favor, configure sua API Key do Groq nas engrenagens (⚙) no topo da tela.');
+    showError('Por favor, configure sua API Key do Google Gemini nas engrenagens (⚙) no topo da tela.');
     setLoading(false);
     return;
   }
@@ -554,26 +554,23 @@ ${profilesStr}
 Inclua todos os 5 perfis_saude. Receita deve ser saudável e adaptada ao perfil do usuário.`;
 
   try {
-    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${storedModel}:generateContent?key=${storedApiKey}`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${storedApiKey}` // <-- Coloque sua API Key do Groq aqui
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: storedModel,
-        temperature: 0.1,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: systemPrompt },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        contents: [
           {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Analise este alimento e retorne SOMENTE o JSON válido.' },
-              { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${capturedImageBase64}` } }
+            parts: [
+              { text: 'Analise este alimento e retorne SOMENTE o JSON válido.' },
+              { inlineData: { mimeType: 'image/jpeg', data: capturedImageBase64 } }
             ]
           }
-        ]
+        ],
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0.1
+        }
       })
     });
 
@@ -583,7 +580,7 @@ Inclua todos os 5 perfis_saude. Receita deve ser saudável e adaptada ao perfil 
     }
 
     const data = await resp.json();
-    const raw = data.choices[0].message.content;
+    const raw = data.candidates[0].content.parts[0].text;
     const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
     setLoading(false);
     renderResult(result);

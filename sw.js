@@ -22,7 +22,7 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.url.includes('groq.com') || event.request.url.includes('fonts.google')) {
+  if (event.request.url.includes('googleapis.com') || event.request.url.includes('fonts.google')) {
     return;
   }
   event.respondWith(
