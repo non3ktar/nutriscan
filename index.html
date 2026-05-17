@@ -208,7 +208,7 @@
       <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Gemini API Key</label>
       <input type="password" class="modal-input" id="apiKeyInput" placeholder="AIza..." autocomplete="off">
       <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Modelo Vision</label>
-      <input type="text" class="modal-input" id="modelInput" placeholder="ex: gemini-1.5-flash" value="gemini-1.5-flash" autocomplete="off">
+      <input type="text" class="modal-input" id="modelInput" placeholder="ex: gemini-flash-latest" value="gemini-flash-latest" autocomplete="off">
 
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancelar</button>
@@ -382,7 +382,7 @@
 
 
 let storedApiKey = localStorage.getItem('gemini_api_key') || '';
-let storedModel = localStorage.getItem('gemini_model') || 'gemini-1.5-flash';
+let storedModel = localStorage.getItem('gemini_model') || 'gemini-flash-latest';
 
 function openSettings() {
   document.getElementById('apiKeyInput').value = storedApiKey;
@@ -396,7 +396,7 @@ function closeSettings() {
 
 function saveApiKey() {
   const keyVal = document.getElementById('apiKeyInput').value.trim();
-  const modelVal = document.getElementById('modelInput').value.trim() || 'gemini-1.5-flash';
+  const modelVal = document.getElementById('modelInput').value.trim() || 'gemini-flash-latest';
   
   storedApiKey = keyVal;
   storedModel = modelVal;
