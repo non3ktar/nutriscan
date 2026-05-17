@@ -203,8 +203,13 @@
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-content">
       <div class="modal-title">Configurações</div>
+      
       <div class="modal-desc">Insira sua API Key gratuita do Groq para analisar os alimentos. Ela ficará salva apenas neste dispositivo (seguro para GitHub Pages).</div>
+      <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Groq API Key</label>
       <input type="password" class="modal-input" id="apiKeyInput" placeholder="gsk_..." autocomplete="off">
+      <label style="font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; display: block;">Modelo Vision</label>
+      <input type="text" class="modal-input" id="modelInput" placeholder="ex: llama-3.2-11b-vision-preview" value="llama-3.2-11b-vision-preview" autocomplete="off">
+
       <div class="modal-actions">
         <button class="modal-btn modal-btn-cancel" onclick="closeSettings()">Cancelar</button>
         <button class="modal-btn modal-btn-save" onclick="saveApiKey()">Salvar</button>
@@ -375,10 +380,13 @@
 
 <script>
 
+
 let storedApiKey = localStorage.getItem('groq_api_key') || '';
+let storedModel = localStorage.getItem('groq_model') || 'llama-3.2-11b-vision-preview';
 
 function openSettings() {
   document.getElementById('apiKeyInput').value = storedApiKey;
+  document.getElementById('modelInput').value = storedModel;
   document.getElementById('settingsModal').classList.add('active');
 }
 
@@ -387,15 +395,19 @@ function closeSettings() {
 }
 
 function saveApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  storedApiKey = val;
-  if(val) {
-    localStorage.setItem('groq_api_key', val);
-  } else {
-    localStorage.removeItem('groq_api_key');
-  }
+  const keyVal = document.getElementById('apiKeyInput').value.trim();
+  const modelVal = document.getElementById('modelInput').value.trim() || 'llama-3.2-11b-vision-preview';
+  
+  storedApiKey = keyVal;
+  storedModel = modelVal;
+  
+  if(keyVal) localStorage.setItem('groq_api_key', keyVal);
+  else localStorage.removeItem('groq_api_key');
+  
+  localStorage.setItem('groq_model', modelVal);
   closeSettings();
 }
+
 
 
 if ('serviceWorker' in navigator) {
@@ -549,7 +561,7 @@ Inclua todos os 5 perfis_saude. Receita deve ser saudável e adaptada ao perfil 
         'Authorization': `Bearer ${storedApiKey}` // <-- Coloque sua API Key do Groq aqui
       },
       body: JSON.stringify({
-        model: 'llama-3.2-90b-vision-preview',
+        model: storedModel,
         temperature: 0.1,
         response_format: { type: 'json_object' },
         messages: [
