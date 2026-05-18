@@ -192,6 +192,28 @@
   .modal-btn-save { background: var(--p1); color: #ffffff; box-shadow: 0 4px 12px rgba(147, 216, 128, 0.3); }
   .modal-btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(147, 216, 128, 0.4); }
 
+
+  /* HEADER ACTIONS */
+  .header-actions { display: flex; gap: 8px; }
+  .history-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 1px solid var(--bg-rim); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); font-size: 17px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+
+  /* CLEAR BTN */
+  .clear-btn { margin-top: 24px; width: 100%; padding: 16px; border-radius: var(--r-md); background: transparent; border: 2px dashed var(--border-lm); color: var(--muted); font-family: var(--font-body); font-weight: 600; font-size: 15px; cursor: pointer; transition: all 0.2s; }
+  .clear-btn:active { background: var(--bg-rim); }
+
+  /* HISTORY MODAL */
+  .history-list { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; margin-bottom: 10px; padding-right: 4px; }
+  .history-list::-webkit-scrollbar { width: 4px; }
+  .history-list::-webkit-scrollbar-thumb { background: var(--bg-rim); border-radius: 4px; }
+  .history-item { padding: 12px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border-l); display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; }
+  .history-item:hover { border-color: var(--p1); }
+  .history-emoji { font-size: 26px; }
+  .history-info { flex: 1; }
+  .history-name { font-weight: 600; color: var(--on-light); font-size: 14px; }
+  .history-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .history-delete { font-size: 14px; color: var(--bad-text); padding: 8px; cursor: pointer; opacity: 0.7; }
+  .history-delete:hover { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -199,6 +221,19 @@
 
   <!-- HEADER -->
   
+  
+  <!-- HISTORY MODAL -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-content" style="max-width: 400px; width: 95%;">
+      <div class="modal-title">Diário Nutricional</div>
+      <div class="modal-desc">Seus alimentos escaneados e receitas salvas automaticamente.</div>
+      <div class="history-list" id="historyList"></div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeHistory()">Fechar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- SETTINGS MODAL -->
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-content">
@@ -373,6 +408,9 @@
           <div class="health-alerts" id="healthAlertsDetail"></div>
         </div>
 
+        <button class="clear-btn" onclick="clearAll()">+ Escanear Novo Alimento</button>
+
+
       </div>
     </div>
   </div>
@@ -417,6 +455,77 @@ if ('serviceWorker' in navigator) {
     }).catch(err => console.error('Erro no SW:', err));
   });
 }
+
+
+// --- HISTORY & CLEAR LOGIC ---
+
+function saveToHistory(data) {
+  let hist = JSON.parse(localStorage.getItem('nutriscan_history') || '[]');
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}),
+    data: data
+  };
+  hist.unshift(entry);
+  if(hist.length > 50) hist.pop();
+  localStorage.setItem('nutriscan_history', JSON.stringify(hist));
+}
+
+function clearAll() {
+  document.getElementById('resultWrap').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'block';
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('placeholder').style.display = 'flex';
+  document.getElementById('scanBtn').disabled = true;
+  document.getElementById('cameraInput').value = '';
+  capturedImageBase64 = null;
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function openHistory() {
+  const hist = JSON.parse(localStorage.getItem('nutriscan_history') || '[]');
+  const list = document.getElementById('historyList');
+  if(hist.length === 0) {
+    list.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--muted); font-size:13px;">Nenhum alimento salvo ainda.</div>';
+  } else {
+    list.innerHTML = hist.map(h => `
+      <div class="history-item" onclick="loadHistoryItem(${h.id})">
+        <div class="history-emoji">${h.data.alimento?.emoji || '🍽️'}</div>
+        <div class="history-info">
+          <div class="history-name">${h.data.alimento?.nome || 'Alimento Indefinido'}</div>
+          <div class="history-date">${h.date}</div>
+        </div>
+        <div class="history-delete" onclick="event.stopPropagation(); deleteHistoryItem(${h.id})">🗑️</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('historyModal').classList.add('active');
+}
+
+function closeHistory() {
+  document.getElementById('historyModal').classList.remove('active');
+}
+
+function loadHistoryItem(id) {
+  const hist = JSON.parse(localStorage.getItem('nutriscan_history') || '[]');
+  const item = hist.find(h => h.id === id);
+  if(item) {
+    closeHistory();
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('preview').style.display = 'none';
+    capturedImageBase64 = null;
+    document.getElementById('scanBtn').disabled = true;
+    renderResult(item.data);
+  }
+}
+
+function deleteHistoryItem(id) {
+  let hist = JSON.parse(localStorage.getItem('nutriscan_history') || '[]');
+  hist = hist.filter(h => h.id !== id);
+  localStorage.setItem('nutriscan_history', JSON.stringify(hist));
+  openHistory();
+}
+// -----------------------------
 
 // Add event listener to settings button
 document.querySelector('.settings-btn').addEventListener('click', openSettings);
@@ -604,9 +713,13 @@ Inclua todos os 5 perfis_saude. Receita deve ser saudável e adaptada ao perfil 
     }
 
     const data = await resp.json();
-    const raw = data.candidates[0].content.parts[0].text;
+        const raw = data.candidates[0].content.parts[0].text;
     const result = JSON.parse(raw.replace(/```json|```/g, '').trim());
     setLoading(false);
+    
+    // Save to local storage automatically
+    saveToHistory(result);
+    
     renderResult(result);
 
   } catch (e) {
