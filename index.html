@@ -50,8 +50,8 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
-  body { font-family: var(--font-body); background: var(--bg-base); color: var(--on-light); overscroll-behavior: none; }
-  #app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  body { font-family: var(--font-body); background: #e0e8dd; color: var(--on-light); overscroll-behavior: none; }
+  #app { max-width: 480px; margin: 0 auto; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-base); box-shadow: 0 0 40px rgba(0,0,0,0.08); position: relative; }
 
   .header { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-l); padding: 14px 20px 12px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
   .logo { display: flex; align-items: center; gap: 10px; }
@@ -262,7 +262,10 @@
       </div>
       <span class="logo-text">Nutri<span>Scan</span></span>
     </div>
-    <div class="settings-btn">⚙</div>
+    <div class="header-actions">
+      <div class="history-btn" onclick="openHistory()">🕒</div>
+      <div class="settings-btn">⚙</div>
+    </div>
   </div>
 
   <!-- INSTALL BANNER -->
